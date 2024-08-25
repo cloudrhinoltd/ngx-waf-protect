@@ -1,0 +1,46 @@
+name: Weekly Build
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every Monday
+    - cron: '0 0 * * 1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libssl3 \
+          libpcre3 \
+          zlib1g \
+          libstdc++6 \
+          dumb-init \
+          wget \
+          git \
+          cmake \
+          build-essential \
+          libmaxminddb0 \
+          sudo \
+          vim \
+          net-tools \
+          openssl \
+          ca-certificates \
+          && rm -rf /var/lib/apt/lists/*
+
+    - name: Run Build Script
+      run: |
+        chmod +x scripts/build.sh
+        ./scripts/build.sh
+
+    - name: Archive Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: build/
