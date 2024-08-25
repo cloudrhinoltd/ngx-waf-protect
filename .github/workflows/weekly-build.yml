@@ -32,8 +32,7 @@ jobs:
           vim \
           net-tools \
           openssl \
-          ca-certificates \
-          && rm -rf /var/lib/apt/lists/*
+          ca-certificates
 
     - name: Run Build Script
       run: |
