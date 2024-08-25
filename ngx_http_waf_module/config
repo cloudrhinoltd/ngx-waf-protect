@@ -1,0 +1,25 @@
+ngx_addon_name=ngx_http_waf_module
+
+# Add the WAF module to the list of HTTP modules
+HTTP_MODULES="$HTTP_MODULES ngx_http_waf_module"
+
+# Define the source files for the module
+NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/src/ngx_http_waf_module.cpp"
+
+# Specify dependencies for the module
+NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_addon_dir/include/ngx_http_waf_module.h"
+
+
+# Define the module type and name
+NGX_MODULE_TYPE=HTTP
+NGX_MODULE_NAME=ngx_http_waf_module
+NGX_MODULE_ORDER=1234
+
+# Add the module to the list of NGINX modules
+NGX_MODULES="$NGX_MODULES ngx_http_waf_module"
+
+# Link the C++ standard library
+CORE_LIBS="$CORE_LIBS -lstdc++"
+
+# Include the module build configuration
+. auto/module

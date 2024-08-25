@@ -1,0 +1,129 @@
+# Compiled object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# NGINX build directories
+objs/
+build/
+temp/
+
+# NGINX logs
+logs/
+*.log
+
+# NGINX cache
+client_body_temp/
+proxy_temp/
+fastcgi_temp/
+uwsgi_temp/
+scgi_temp/
+
+# Dependency directories
+deps/
+deps/*
+/pcre-8.45/
+/luajit/
+/openssl/
+
+# Generated files
+*.dSYM/
+*.dSYM/*
+*.d
+*.dwo
+*.lst
+*.map
+*.exp
+
+# Build directories
+cmake-build-debug/
+cmake-build-release/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Vim swap files
+*.swp
+
+# Backup files
+*~
+*.bak
+*.old
+*.orig
+*.rej
+
+# Archive files
+*.tar.gz
+*.zip
+*.7z
+*.tar.xz
+*.tgz
+
+# IDE specific files
+.idea/
+.vscode/
+.project
+.cproject
+
+# Ignore configuration files
+*.conf
+nginx.conf
+
+# Ignore sensitive data
+*.key
+*.crt
+*.pem
+*.p12
+
+# Ignore the build script logs
+*.log
+*.cmd
+*.bat
+*.pyc
+
+# Ignore test files and directories
+tests/
+test/
+*.test
+
+# Ignore output from `make`
+Makefile
+CMakeLists.txt
+*.cmake
+*.env
+
+# Ignore documentation
+docs/
+*.md
+
+# Ignore nginx core
+nginx-1.27.1/
+
+# temp
+temp/
+
+# logs
+logs/

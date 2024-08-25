@@ -1,0 +1,30 @@
+Cloud Rhino Pty Ltd Commercial License
+
+This license applies to specific components of the WAF module developed by Cloud Rhino Pty Ltd, namely:
+
+- `enable_rce_php_node`
+- `enable_session_rules`
+- `enable_sql_injection`
+- `enable_xss`
+
+By using these features, you agree to the terms outlined below.
+
+1. License Grant:
+   Cloud Rhino Pty Ltd grants you a non-exclusive, non-transferable, limited right to use the above-mentioned features of the WAF module for your internal business operations.
+
+2. Restrictions:
+   You may not sublicense, distribute, or create derivative works of these features without prior written consent from Cloud Rhino Pty Ltd.
+
+3. Termination:
+   This license is effective until terminated. Cloud Rhino Pty Ltd may terminate this license immediately if you fail to comply with any terms of this agreement.
+
+4. Disclaimer of Warranties:
+   The WAF features licensed under this agreement are provided "as is" without warranty of any kind, either express or implied.
+
+5. Limitation of Liability:
+   In no event shall Cloud Rhino Pty Ltd be liable for any special, incidental, indirect, or consequential damages arising out of the use or inability to use these WAF features.
+
+For more information on purchasing a commercial license, please contact:
+Cloud Rhino Pty Ltd
+Email: cloudrhinoltd@gmail.com
+GitHub: https://github.com/cloudrhinoltd/ngx-waf-protect
