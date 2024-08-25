@@ -24,192 +24,180 @@
 #include "../include/waf_utils.h"
 #include <regex>
 
+// Function to check for HTTP protocol anomalies
+ngx_int_t is_protocol_anomaly(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered is_protocol_anomaly");
+
+    std::string request(reinterpret_cast<const char *>(r->request_line.data), r->request_line.len);
+    std::regex regex_pattern;
+    
+    if (compile_and_log_regex(r, get_pattern_from_conf(r, "protocol_anomaly_pattern"), "is_protocol_anomaly", regex_pattern, std::regex_constants::icase)) {
+        if (std::regex_search(request, regex_pattern)) {
+            ngx_waf_log_access(r, "Exiting is_protocol_anomaly with attack detected");
+            return log_and_reject(r, "HTTP Protocol Anomaly", "000000");
+        }
+    }
+
+    ngx_waf_log_access(r, "Exiting is_protocol_anomaly with no attack detected");
+    return NGX_DECLINED;
+}
+
 // Function to check HTTP Request Smuggling Attack (RuleId: 921110)
-bool check_http_request_smuggling(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_http_request_smuggling");
+ngx_int_t check_http_request_smuggling(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_http_request_smuggling");
     if (r->headers_in.transfer_encoding && r->headers_in.content_length) {
-        ngx_waf_log_access(r,"Exiting check_http_request_smuggling with attack detected");
+        ngx_waf_log_access(r, "Exiting check_http_request_smuggling with attack detected");
         return log_and_reject(r, "HTTP Request Smuggling Attack", "921110");
     }
-    ngx_waf_log_access(r,"Exiting check_http_request_smuggling with no attack detected");
-    return false;
+    ngx_waf_log_access(r, "Exiting check_http_request_smuggling with no attack detected");
+    return NGX_DECLINED;
 }
 
 // Function to check HTTP Response Splitting Attack (RuleId: 921120, 921130)
-bool check_http_response_splitting(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_http_response_splitting");
-    std::string request(reinterpret_cast<const char*>(r->request_line.data), r->request_line.len);
-    if (request.find("
-") != std::string::npos) {
-        ngx_waf_log_access(r,"Exiting check_http_response_splitting with attack detected");
+ngx_int_t check_http_response_splitting(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_http_response_splitting");
+
+    std::string request(reinterpret_cast<const char *>(r->request_line.data), r->request_line.len);
+    if (request.find("\r\n") != std::string::npos) {
+        ngx_waf_log_access(r, "Exiting check_http_response_splitting with attack detected");
         return log_and_reject(r, "HTTP Response Splitting Attack", "921120, 921130");
     }
-    ngx_waf_log_access(r,"Exiting check_http_response_splitting with no attack detected");
-    return false;
+
+    ngx_waf_log_access(r, "Exiting check_http_response_splitting with no attack detected");
+    return NGX_DECLINED;
 }
 
-// Function to check HTTP Header Injection Attack (RuleId: 921140, 921150, 921151, 921160)
-bool check_http_header_injection(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_http_header_injection");
+// Updated function to check HTTP Header Injection Attack (RuleId: 921140, 921150, 921151, 921160)
+ngx_int_t check_http_header_injection(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_http_header_injection");
     ngx_list_part_t *part = &r->headers_in.headers.part;
-    ngx_table_elt_t *header = (ngx_table_elt_t *) part->elts;
+    ngx_table_elt_t *header = (ngx_table_elt_t *)part->elts;
 
-    for (ngx_uint_t i = 0; ; i++) {
+    for (ngx_uint_t i = 0;; i++) {
         if (i >= part->nelts) {
             if (part->next == NULL) {
                 break;
             }
             part = part->next;
-            header = (ngx_table_elt_t *) part->elts;
+            header = (ngx_table_elt_t *)part->elts;
             i = 0;
         }
 
         std::string header_value(reinterpret_cast<const char*>(header[i].value.data), header[i].value.len);
-        if (header_value.find("") != std::string::npos || header_value.find("
-") != std::string::npos) {
-            ngx_waf_log_access(r,"Exiting check_http_header_injection with attack detected");
+
+        // Decode percent-encoded characters in the header value
+        std::string decoded_header_value = decode_percent_encoded(header_value);
+
+        // Check for injected carriage return and newline characters
+        if (decoded_header_value.find("\r") != std::string::npos || decoded_header_value.find("\n") != std::string::npos) {
+            ngx_waf_log_access(r, "Exiting check_http_header_injection with attack detected");
             return log_and_reject(r, "HTTP Header Injection Attack", "921140, 921150, 921151, 921160");
         }
     }
-    ngx_waf_log_access(r,"Exiting check_http_header_injection with no attack detected");
-    return false;
+
+    ngx_waf_log_access(r, "Exiting check_http_header_injection with no attack detected");
+    return NGX_DECLINED;
 }
 
 // Function to check HTTP Splitting (CR/LF in request filename) (RuleId: 921190)
-bool check_http_splitting(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_http_splitting");
-    std::string uri(reinterpret_cast<const char*>(r->uri.data), r->uri.len);
-    if (uri.find("") != std::string::npos || uri.find("
-") != std::string::npos) {
-        ngx_waf_log_access(r,"Exiting check_http_splitting with attack detected");
+ngx_int_t check_http_splitting(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_http_splitting");
+
+    // Decode the URI to catch any percent-encoded characters
+    std::string uri = decode_percent_encoded(std::string(reinterpret_cast<const char *>(r->uri.data), r->uri.len));
+
+    if (uri.find("\r") != std::string::npos || uri.find("\n") != std::string::npos) {
+        ngx_waf_log_access(r, "Exiting check_http_splitting with attack detected");
         return log_and_reject(r, "HTTP Splitting (CR/LF in request filename detected)", "921190");
     }
-    ngx_waf_log_access(r,"Exiting check_http_splitting with no attack detected");
-    return false;
+    ngx_waf_log_access(r, "Exiting check_http_splitting with no attack detected");
+    return NGX_DECLINED;
 }
 
 // Function to check LDAP Injection Attack (RuleId: 921200)
-bool check_ldap_injection_attack(ngx_http_request_t *r) {
+ngx_int_t check_ldap_injection_attack(ngx_http_request_t *r) {
     ngx_waf_log_access(r, "Entered check_ldap_injection_attack");
 
-    // Extract the query string from the request
-    std::string query(reinterpret_cast<const char*>(r->args.data), r->args.len);
-
-    // Get the LDAP injection pattern from the configuration
-    std::string ldap_pattern = get_pattern_from_conf(r, "ldap_injection_pattern");
-
-    try {
-        std::regex ldap_injection_pattern(ldap_pattern);
-
-        // Log the pattern and query for debugging
-        ngx_waf_log_access(r, ("LDAP Injection Pattern: " + ldap_pattern).c_str());
-        ngx_waf_log_access(r, ("Query: " + query).c_str());
-
-        // Perform regex search to check for LDAP injection
-        if (std::regex_search(query, ldap_injection_pattern)) {
+    std::string query(reinterpret_cast<const char *>(r->args.data), r->args.len);
+    std::regex regex_pattern;
+    
+    if (compile_and_log_regex(r, get_pattern_from_conf(r, "ldap_injection_pattern"), "check_ldap_injection_attack", regex_pattern)) {
+        if (std::regex_search(query, regex_pattern)) {
             ngx_waf_log_access(r, "Exiting check_ldap_injection_attack with attack detected");
             return log_and_reject(r, "LDAP Injection Attack", "921200");
         }
-    } catch (const std::exception &e) {
-        ngx_waf_log_access(r, ("Exception in LDAP injection check: " + std::string(e.what())).c_str());
     }
 
     ngx_waf_log_access(r, "Exiting check_ldap_injection_attack with no attack detected");
-    return false;
+    return NGX_DECLINED;
 }
 
 // Function to check Path Traversal Attack (/../) (RuleId: 930100, 930110)
-bool check_path_traversal_attack(ngx_http_request_t *r) {
+ngx_int_t check_path_traversal_attack(ngx_http_request_t *r) {
     ngx_waf_log_access(r, "Entered check_path_traversal_attack");
+
+    std::string uri(reinterpret_cast<const char *>(r->uri.data), r->uri.len);
+    std::regex regex_pattern;
     
-    // Extract the URI from the request
-    std::string uri(reinterpret_cast<const char*>(r->uri.data), r->uri.len);
-
-    // Log the URI for debugging
-    ngx_waf_log_access(r, ("URI: " + uri).c_str());
-
-    // Skip check for empty URIs or root path
-    if (uri.empty() || uri == "/") {
-        ngx_waf_log_access(r, "Exiting check_path_traversal_attack with no attack detected due to empty or root URI");
-        return false;
-    }
-
-    // Get the path traversal pattern from the configuration
-    std::string path_traversal_pattern = get_pattern_from_conf(r, "path_traversal_pattern");
-
-    // Log the pattern for debugging
-    ngx_waf_log_access(r, ("Path Traversal Pattern: " + path_traversal_pattern).c_str());
-
-    try {
-        // Compile the regex pattern
-        std::regex path_traversal_regex(path_traversal_pattern);
-
-        // Perform regex search to check for path traversal
-        if (std::regex_search(uri, path_traversal_regex)) {
+    if (compile_and_log_regex(r, get_pattern_from_conf(r, "path_traversal_pattern"), "check_path_traversal_attack", regex_pattern)) {
+        if (std::regex_search(uri, regex_pattern)) {
             ngx_waf_log_access(r, "Exiting check_path_traversal_attack with attack detected");
             return log_and_reject(r, "Path Traversal Attack (/../)", "930100, 930110");
         }
-    } catch (const std::exception &e) {
-        ngx_waf_log_access(r, ("Exception in path traversal check: " + std::string(e.what())).c_str());
     }
 
     ngx_waf_log_access(r, "Exiting check_path_traversal_attack with no attack detected");
-    return false;
+    return NGX_DECLINED;
 }
 
 // Function to check OS File Access Attempt (RuleId: 930120)
-bool check_os_file_access_attempt(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_os_file_access_attempt");
-    std::string uri(reinterpret_cast<const char*>(r->uri.data), r->uri.len);
-    std::regex os_file_access_pattern(get_pattern_from_conf(r, "os_file_access_pattern"));
-    if (std::regex_search(uri, os_file_access_pattern)) {
-        ngx_waf_log_access(r,"Exiting check_os_file_access_attempt with attack detected");
-        return log_and_reject(r, "OS File Access Attempt", "930120");
+ngx_int_t check_os_file_access_attempt(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_os_file_access_attempt");
+
+    std::string uri(reinterpret_cast<const char *>(r->uri.data), r->uri.len);
+    std::regex regex_pattern;
+    
+    if (compile_and_log_regex(r, get_pattern_from_conf(r, "os_file_access_pattern"), "check_os_file_access_attempt", regex_pattern)) {
+        if (std::regex_search(uri, regex_pattern)) {
+            ngx_waf_log_access(r, "Exiting check_os_file_access_attempt with attack detected");
+            return log_and_reject(r, "OS File Access Attempt", "930120");
+        }
     }
-    ngx_waf_log_access(r,"Exiting check_os_file_access_attempt with no attack detected");
-    return false;
+
+    ngx_waf_log_access(r, "Exiting check_os_file_access_attempt with no attack detected");
+    return NGX_DECLINED;
 }
 
 // Function to check Restricted File Access Attempt (RuleId: 930130)
-bool check_restricted_file_access_attempt(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_restricted_file_access_attempt");
-    std::string uri(reinterpret_cast<const char*>(r->uri.data), r->uri.len);
+ngx_int_t check_restricted_file_access_attempt(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_restricted_file_access_attempt");
 
-    std::string restricted_file_access_pattern = get_pattern_from_conf(r, "restricted_file_access_pattern");
-    ngx_waf_log_access(r, ("Restricted File Access Pattern: " + restricted_file_access_pattern).c_str());
+    std::string uri(reinterpret_cast<const char *>(r->uri.data), r->uri.len);
+    std::regex regex_pattern;
 
-    std::regex restricted_file_access_regex(restricted_file_access_pattern);
-
-    if (std::regex_search(uri, restricted_file_access_regex)) {
-        ngx_waf_log_access(r,"Exiting check_restricted_file_access_attempt with attack detected");
-        return log_and_reject(r, "Restricted File Access Attempt", "930130");
+    if (compile_and_log_regex(r, get_pattern_from_conf(r, "restricted_file_access_pattern"), "check_restricted_file_access_attempt", regex_pattern)) {
+        if (std::regex_search(uri, regex_pattern)) {
+            ngx_waf_log_access(r, "Exiting check_restricted_file_access_attempt with attack detected");
+            return log_and_reject(r, "Restricted File Access Attempt", "930130");
+        }
     }
-    ngx_waf_log_access(r,"Exiting check_restricted_file_access_attempt with no attack detected");
-    return false;
+
+    ngx_waf_log_access(r, "Exiting check_restricted_file_access_attempt with no attack detected");
+    return NGX_DECLINED;
 }
 
 // Function to check Remote File Inclusion Attack (RuleId: 931100, 931110, 931120, 931130)
-bool check_remote_file_inclusion_attack(ngx_http_request_t *r) {
-    ngx_waf_log_access(r,"Entered check_remote_file_inclusion_attack");
-    std::string query(reinterpret_cast<const char*>(r->args.data), r->args.len);
+ngx_int_t check_remote_file_inclusion_attack(ngx_http_request_t *r) {
+    ngx_waf_log_access(r, "Entered check_remote_file_inclusion_attack");
 
-    std::string rfi_ip_pattern = get_pattern_from_conf(r, "rfi_ip_pattern");
-    std::string rfi_common_param_pattern = get_pattern_from_conf(r, "rfi_common_param_pattern");
-    std::string rfi_trailing_question_mark_pattern = get_pattern_from_conf(r, "rfi_trailing_question_mark_pattern");
-    std::string rfi_off_domain_pattern = get_pattern_from_conf(r, "rfi_off_domain_pattern");
+    std::string query(reinterpret_cast<const char *>(r->args.data), r->args.len);
 
-    ngx_waf_log_access(r, ("RFI IP Pattern: " + rfi_ip_pattern).c_str());
-    ngx_waf_log_access(r, ("RFI Common Param Pattern: " + rfi_common_param_pattern).c_str());
-    ngx_waf_log_access(r, ("RFI Trailing Question Mark Pattern: " + rfi_trailing_question_mark_pattern).c_str());
-    ngx_waf_log_access(r, ("RFI Off Domain Pattern: " + rfi_off_domain_pattern).c_str());
+    std::regex rfi_ip_regex, rfi_common_param_regex, rfi_trailing_question_mark_regex, rfi_off_domain_regex;
 
-    try {
-        std::regex rfi_ip_regex(rfi_ip_pattern);
-        std::regex rfi_common_param_regex(rfi_common_param_pattern);
-        std::regex rfi_trailing_question_mark_regex(rfi_trailing_question_mark_pattern);
-        std::regex rfi_off_domain_regex(rfi_off_domain_pattern);
-
-        ngx_waf_log_access(r, "Regex compiled successfully");
+    if (compile_and_log_regex(r, get_pattern_from_conf(r, "rfi_ip_pattern"), "check_remote_file_inclusion_attack (IP)", rfi_ip_regex) &&
+        compile_and_log_regex(r, get_pattern_from_conf(r, "rfi_common_param_pattern"), "check_remote_file_inclusion_attack (Common Param)", rfi_common_param_regex) &&
+        compile_and_log_regex(r, get_pattern_from_conf(r, "rfi_trailing_question_mark_pattern"), "check_remote_file_inclusion_attack (Trailing Question Mark)", rfi_trailing_question_mark_regex) &&
+        compile_and_log_regex(r, get_pattern_from_conf(r, "rfi_off_domain_pattern"), "check_remote_file_inclusion_attack (Off Domain)", rfi_off_domain_regex)) {
 
         if (std::regex_search(query, rfi_ip_regex)) {
             ngx_waf_log_access(r,"Exiting check_remote_file_inclusion_attack with attack detected: URL Parameter using IP address");
@@ -224,29 +212,27 @@ bool check_remote_file_inclusion_attack(ngx_http_request_t *r) {
             ngx_waf_log_access(r,"Exiting check_remote_file_inclusion_attack with attack detected: Off-Domain Reference/Link");
             return log_and_reject(r, "Possible Remote File Inclusion (RFI) Attack: Off-Domain Reference/Link", "931130");
         }
-    } catch (const std::regex_error &e) {
-        ngx_waf_log_access(r, ("Regex error: " + std::string(e.what())).c_str());
-        return false;
-    } catch (const std::exception &e) {
-        ngx_waf_log_access(r, ("Exception: " + std::string(e.what())).c_str());
-        return false;
     }
+
     ngx_waf_log_access(r,"Exiting check_remote_file_inclusion_attack with no attack detected");
-    return false;
+    return NGX_DECLINED;
 }
 
 // Entry point function
 ngx_int_t protocol_attack_entry_point(ngx_http_request_t *r) {
     ngx_waf_log_access(r,"Entered protocol_attack_entry_point");
-    if (check_http_request_smuggling(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_http_response_splitting(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_http_header_injection(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_http_splitting(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_ldap_injection_attack(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_path_traversal_attack(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_os_file_access_attempt(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_restricted_file_access_attempt(r)) return NGX_HTTP_FORBIDDEN;
-    if (check_remote_file_inclusion_attack(r)) return NGX_HTTP_FORBIDDEN;
+    
+    if (is_protocol_anomaly(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_http_request_smuggling(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_http_response_splitting(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_http_header_injection(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_http_splitting(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_ldap_injection_attack(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_path_traversal_attack(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_os_file_access_attempt(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_restricted_file_access_attempt(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+    if (check_remote_file_inclusion_attack(r) != NGX_DECLINED) return NGX_HTTP_FORBIDDEN;
+
     ngx_waf_log_access(r,"Exiting protocol_attack_entry_point with no attack detected");
     return NGX_DECLINED;
 }

@@ -6,12 +6,12 @@ HOME_DIR=$(pwd)
 NGINX_VERSION="1.27.1"
 PROJECT_NAME="ngx_http_waf_module"
 NGINX_SRC_DIR="$HOME_DIR/nginx-$NGINX_VERSION"
-NGINX_CONF="$HOME_DIR/nginx.conf"
 NGINX_EXEC="$NGINX_SRC_DIR/objs/nginx"
 NGINX_LOG_DIR="$HOME_DIR/logs"
 NGINX_TEMP_DIR="$HOME_DIR/temp"
 GEOIP_DB_PATH="$HOME_DIR/build/geoip/GeoLite2-City.mmdb"
 BUILD_DIR="$HOME_DIR/build"
+NGINX_CONF="$BUILD_DIR/nginx.conf"
 
 # Ensure directories exist
 mkdir -p "$BUILD_DIR"
@@ -81,6 +81,9 @@ if [ ! -f "$NGINX_EXEC" ]; then
 fi
 
 # Copy the NGINX binary to the build directory
+cd $HOME_DIR
+build/nginx -s stop || true
+
 cp "$NGINX_EXEC" "$BUILD_DIR/nginx"
 cp "$NGINX_SRC_DIR/conf/mime.types" "$BUILD_DIR"
 
@@ -146,3 +149,5 @@ echo "<html><body><h1>CLRH NGINX WAF Module Test</h1></body></html>" > "$BUILD_D
 
 # Output success message
 echo "Custom NGINX with WAF module built successfully and located at $BUILD_DIR."
+cd $HOME_DIR
+build/nginx

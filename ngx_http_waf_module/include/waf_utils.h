@@ -40,5 +40,6 @@ bool compile_and_log_regex(ngx_http_request_t *r, const std::string &pattern_str
 
 void ngx_waf_log_access(ngx_http_request_t *r, const std::string &message);
 void ngx_waf_log_access(ngx_http_request_t *r, const char *message);
+std::string decode_percent_encoded(const std::string &input);
 
 #endif // WAF_UTILS_H

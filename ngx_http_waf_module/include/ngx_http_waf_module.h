@@ -1,22 +1,22 @@
 /*
  * Copyright (C) 2024 Cloud Rhino Pty Ltd
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * This module contains parts under a dual-license:
- * Only the 'enable_protocol_attack' and 'enable_general_rules' features are 
+ * Only the 'enable_protocol_attack' and 'enable_general_rules' features are
  * covered by the Apache 2.0 License, other features require a commercial license.
- * 
+ *
  * GitHub Repo: https://github.com/cloudrhinoltd/ngx-waf-protect
  * Contact Email: cloudrhinoltd@gmail.com
  */
@@ -48,6 +48,9 @@ extern "C"
 // Module config
 typedef struct
 {
+    // Skip FAW for requests from localhost
+    ngx_flag_t skip_local;
+
     ngx_flag_t enable_sql_injection;
     ngx_flag_t enable_xss;
     ngx_flag_t enable_protocol_attack;
@@ -945,6 +948,12 @@ ngx_command_t ngx_http_waf_commands[] = {
      ngx_conf_set_str_slot,
      NGX_HTTP_LOC_CONF_OFFSET,
      offsetof(ngx_http_waf_loc_conf_t, rce_direct_unix_command_pattern),
+     NULL},
+    {ngx_string("skip_local"),
+     NGX_HTTP_LOC_CONF | NGX_CONF_FLAG,
+     ngx_conf_set_flag_slot,
+     NGX_HTTP_LOC_CONF_OFFSET,
+     offsetof(ngx_http_waf_loc_conf_t, skip_local),
      NULL},
     {ngx_string("enable_sql_injection"),
      NGX_HTTP_LOC_CONF | NGX_CONF_FLAG,

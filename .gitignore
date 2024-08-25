@@ -27,7 +27,8 @@
 
 # NGINX build directories
 objs/
-build/
+build/nginx
+build/nginx.cong
 temp/
 
 # NGINX logs
@@ -103,11 +104,6 @@ nginx.conf
 *.cmd
 *.bat
 *.pyc
-
-# Ignore test files and directories
-tests/
-test/
-*.test
 
 # Ignore output from `make`
 Makefile

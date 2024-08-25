@@ -1,22 +1,22 @@
 /*
  * Copyright (C) 2024 Cloud Rhino Pty Ltd
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * This module contains parts under a dual-license:
- * Only the 'enable_protocol_attack' and 'enable_general_rules' features are 
+ * Only the 'enable_protocol_attack' and 'enable_general_rules' features are
  * covered by the Apache 2.0 License, other features require a commercial license.
- * 
+ *
  * GitHub Repo: https://github.com/cloudrhinoltd/ngx-waf-protect
  * Contact Email: cloudrhinoltd@gmail.com
  */
@@ -39,57 +39,58 @@ std::string get_pattern_from_conf_loc(ngx_http_waf_loc_conf_t *wlcf, const char 
 std::string get_pattern_from_conf_loc(ngx_http_waf_loc_conf_t *wlcf, const char *pattern_name, bool first = true)
 {
     std::unordered_map<std::string, std::pair<ngx_str_t, std::string>> pattern_map = {
-        {"xss_pattern", {wlcf->xss_pattern, "(<script.*?>.*?</script.*?>|onload=.*?|javascript:|alert\()"}},
-        {"file_inclusion_pattern", {wlcf->file_inclusion_pattern, "(http://|https://|ftp://|../../|/etc/passwd|C:\\windows)"}},
-        {"command_injection_pattern", {wlcf->command_injection_pattern, "(;|&&|\||wget|curl|system|exec|sh|bash)"}},
-        {"directory_traversal_pattern", {wlcf->directory_traversal_pattern, "(../|..\\|/etc/passwd|/etc/shadow)"}},
+        {"xss_pattern", {wlcf->xss_pattern, "(<script.*?>.*?</script.*?>|onload=.*?|javascript:|alert\\()"}},
+        {"file_inclusion_pattern", {wlcf->file_inclusion_pattern, "(http://|https://|ftp://|../../|/etc/passwd|C:\\\\windows)"}},
+        {"command_injection_pattern", {wlcf->command_injection_pattern, "(;|&&|\\||wget|curl|system|exec|sh|bash)"}},
+        {"directory_traversal_pattern", {wlcf->directory_traversal_pattern, "(../|..\\\\|/etc/passwd|/etc/shadow)"}},
         {"parameter_tampering_pattern", {wlcf->parameter_tampering_pattern, "(unusual|suspicious|manipulated)"}},
-        {"protocol_anomaly_pattern", {wlcf->protocol_anomaly_pattern, "(invalid|unusual|oversized|abnormal)"}},
+        {"protocol_anomaly_pattern", {wlcf->protocol_anomaly_pattern, "^(?:(?i)GET|POST|HEAD|OPTIONS|PUT|DELETE|TRACE|CONNECT)\\s[^\\s]*\\sHTTP\\/(?:0\\.9|1\\.0|1\\.1|2\\.0)\\r\\n(?:[^\\x00-\\x1F\\x7F-\\x9F]+:\\s[^\\x00-\\x1F\\x7F-\\x9F]*\\r\\n)*(?:\\r\\n|[^\\x00-\\x1F\\x7F-\\x9F]+:[^\\x00-\\x1F\\x7F-\\x9F]*\\r\\n)\\r\\n$"}},
         {"malicious_user_agent_pattern", {wlcf->malicious_user_agent_pattern, "(badbot|evilbot|scrapy|crawler|scanner)"}},
         {"url_encoding_abuse_pattern", {wlcf->url_encoding_abuse_pattern, ".*%[0-9a-fA-F]{2}.*"}},
-        {"invalid_request_line_pattern", {wlcf->invalid_request_line_pattern, ".*\r\n.*"}},
+        {"invalid_request_line_pattern", {wlcf->invalid_request_line_pattern, ".*\\r\\n.*"}},
         {"multipart_bypass_pattern", {wlcf->multipart_bypass_pattern, ".*multipart.*"}},
         {"invalid_range_pattern", {wlcf->invalid_range_pattern, ".*bytes=0-.*"}},
         {"multiple_url_encoding_pattern", {wlcf->multiple_url_encoding_pattern, ".*(%25.*%25).*"}},
         {"unicode_abuse_pattern", {wlcf->unicode_abuse_pattern, ".*[uU][0-9a-fA-F]{4}.*"}},
         {"invalid_content_type_pattern", {wlcf->invalid_content_type_pattern, "^(?!application/json$|text/html$|application/xml$|application/x-www-form-urlencoded$|multipart/form-data$|text/plain$).*$"}},
-        {"invalid_charset_pattern", {wlcf->invalid_charset_pattern, "charset\s*=\s*(?!utf-8|iso-8859-1|us-ascii|windows-1252|shift_jis|euc-jp|gb2312|big5|iso-8859-2|iso-8859-15)([^;]+)"}},
-        {"backup_file_pattern", {wlcf->backup_file_pattern, ".*\.bak.*"}},
-        {"ldap_injection_pattern", {wlcf->ldap_injection_pattern, "(&&|\|\||\(\)|\*|\))"}},
-        {"path_traversal_pattern", {wlcf->path_traversal_pattern, "(/\.\./)"}},
-        {"os_file_access_pattern", {wlcf->os_file_access_pattern, "(/etc/passwd|/etc/shadow|/etc/group)"}},
-        {"restricted_file_access_pattern", {wlcf->restricted_file_access_pattern, "(\.htaccess|\.htpasswd|\.git|\.svn|/WEB-INF/)"}},
-        {"rfi_ip_pattern", {wlcf->rfi_ip_pattern, "((http|https|ftp|ftps)://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"}},
-        {"rfi_common_param_pattern", {wlcf->rfi_common_param_pattern, "(\burl\b|\bfile\b|\bpath\b|\bpage\b=)"}},
-        {"rfi_trailing_question_mark_pattern", {wlcf->rfi_trailing_question_mark_pattern, "(\?.*$)"}},
+        {"invalid_charset_pattern", {wlcf->invalid_charset_pattern, "charset\\s*=\\s*(?!utf-8|iso-8859-1|us-ascii|windows-1252|shift_jis|euc-jp|gb2312|big5|iso-8859-2|iso-8859-15)([^;]+)"}},
+        {"backup_file_pattern", {wlcf->backup_file_pattern, ".*\\.bak.*"}},
+        {"ldap_injection_pattern", {wlcf->ldap_injection_pattern, "(\\(|\\)|\\*|&|\\||=|\\!|\\~|\\x2a|\\x28|\\x29|\\x26|\\x7c|\\x3d|\\x21|\\x7e|\\x23|\\x3c|\\x3e|\\x2c|\\x2f|\\x5c|\\x60|\\x22|\\x27|\\x3b|\\x25|\\x2b|\\x2d|\\x3a|\\x5e|\\x2e|\\x5b|\\x5d|\\x7b|\\x7d|\\x5c|\\x27|\\x60|\\x3b|\\x21|\\x23|\\x25|\\x26|\\x28|\\x29|\\x2a|\\x2b|\\x2c|\\x2d|\\x2f|\\x3a|\\x3c|\\x3e|\\x3f|\\x5b|\\x5d|\\x5e|\\x5f|\\x7b|\\x7d)"}},
+        {"path_traversal_pattern", {wlcf->path_traversal_pattern, "(/\\.\\./)"}},
+        {"os_file_access_pattern", {wlcf->os_file_access_pattern, "(?i)(/etc/passwd|/etc/shadow|/etc/group|/etc/hosts|/etc/hostname|/etc/issue|/etc/motd|/etc/network/interfaces|/etc/resolv.conf|/etc/fstab|/etc/nsswitch.conf|/etc/crontab|/etc/init.d/|/etc/systemd/|/etc/rc.local|/etc/sysconfig/|/etc/logrotate.conf|/etc/sysctl.conf|/etc/inittab|/etc/exports|/etc/sudoers|/etc/security/limits.conf|/etc/selinux/|/etc/default/|/etc/xinetd.conf|/etc/xinetd.d/|/etc/pam.d/|/etc/ssh/ssh_config|/etc/ssh/sshd_config|/etc/ssh/authorized_keys|/root/|/home/|/usr/local/etc/|/usr/local/bin/|/usr/local/sbin/|/usr/share/man/|/usr/share/doc/|/var/log/|/var/mail/|/var/spool/|/var/run/|/var/lib/|/var/www/|/var/tmp/|/boot/grub/grub.conf|/boot/grub/menu.lst|/boot/vmlinuz|/boot/initrd.img|/boot/grub2/grub.cfg|/bin/bash|/bin/sh|/sbin/init|/sbin/reboot|/sbin/poweroff|/lib/systemd/|/proc/cpuinfo|/proc/meminfo|/proc/filesystems|/proc/self/environ|/proc/version|/proc/sys/kernel/random/entropy_avail|/proc/sys/kernel/randomize_va_space|/proc/sys/vm/overcommit_memory|/proc/sys/net/ipv4/ip_forward|/proc/sys/net/ipv4/conf/all/forwarding|/proc/sys/net/ipv4/tcp_syncookies|/proc/mounts|/dev/null|/dev/zero|/dev/random|/dev/urandom|/dev/sda|/dev/sda1|/dev/sda2|/dev/sda3|/dev/sda4|/dev/mapper/|/mnt/|/media/|/lost+found|/tmp/|/winnt/|/windows/|/win32/|/windows/system32/|/windows/system32/config/|/windows/system32/drivers/|/windows/system32/drivers/etc/hosts|/windows/system32/drivers/etc/|/windows/system32/config/system|/windows/system32/config/sam|/windows/system32/config/software|/windows/system32/config/security|/windows/system32/config/default|/windows/system32/win.ini|/windows/system32/system.ini|/windows/system32/boot.ini|/windows/system32/autoexec.bat|/windows/system32/config/RegBack/|/windows/system32/cmd.exe|/windows/syswow64/cmd.exe|/windows/system32/taskmgr.exe|/windows/syswow64/taskmgr.exe|/windows/explorer.exe|/windows/regedit.exe|/windows/notepad.exe|/windows/repair/|/windows/inf/|/windows/prefetch/|/windows/profiles/|/windows/recovery/|/windows/serviceprofiles/|/windows/softwaredistribution/|/windows/system/|/windows/systemprofile/|/windows/temp/|/windows/winsxs/|/system32/|/syswow64/|/pagefile.sys|/hiberfil.sys|/swapfile.sys|/desktop.ini|/thumbs.db|/windows/Program Files/|/windows/Program Files (x86)/|boot.ini)"}},
+
+        {"restricted_file_access_pattern", {wlcf->restricted_file_access_pattern, "(\\.htaccess|\\.htpasswd|\\.git|\\.svn|/WEB-INF/|/META-INF/|/\\.gitignore|/\\.env|/\\.DS_Store|/\\.idea|/\\.vscode|/\\.ssh|/\\.config|/\\.aws/|/\\.azure/|/\\.npmrc|/\\.yarnrc|/\\.composer/|/\\.gitattributes|/\\.gitmodules|/\\._.*|/Thumbs\\.db|/\\.dockerignore|/\\.terraform|/\\.circleci|/\\.github|/\\.travis\\.yml|/\\.gitlab-ci\\.yml|/\\.env\\.local|/\\.env\\.production|/\\.env\\.staging|/\\.env\\.test|/\\.secret|/\\.log|/\\.tmp|/\\.backup|/\\$Recycle\\.Bin|/node_modules/|/bower_components/|/vendor/|/composer\\.json|/composer\\.lock|/package\\.json|/yarn\\.lock|/Gemfile|/Gemfile\\.lock|/Pipfile|/Pipfile\\.lock|/requirements\\.txt|/tox\\.ini|/pytest\\.ini|/setup\\.cfg|/setup\\.py|/Vagrantfile|/Dockerfile|/Makefile|/CMakeLists\\.txt|/LICENSE|/README\\.md|/\\.gitkeep|/\\.gitignore|/\\.gitconfig|/\\.gitattributes|/\\.gitmodules|/secret\\.key|/.*\\.key|/.*\\.pem|/.*\\.crt|/.*\\.csr|/.*\\.p12|/.*\\.pfx)"}},
+        {"rfi_ip_pattern", {wlcf->rfi_ip_pattern, "((http|https|ftp|ftps)://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})"}},
+        {"rfi_common_param_pattern", {wlcf->rfi_common_param_pattern, "(\\burl\\b|\\bfile\\b|\\bpath\\b|\\bpage\\b=)"}},
+        {"rfi_trailing_question_mark_pattern", {wlcf->rfi_trailing_question_mark_pattern, "(\\?.*$)"}},
         {"rfi_off_domain_pattern", {wlcf->rfi_off_domain_pattern, "((http|https|ftp|ftps)://)"}},
 
         // RCE Patterns
-        {"rce_unix_command_injection_pattern", {wlcf->rce_unix_command_injection_pattern, "(\b(cat|ls|ps|netstat|whoami|id)\b|;|&&|\|)"}},
-        {"rce_windows_command_injection_pattern", {wlcf->rce_windows_command_injection_pattern, "(\b(cmd|powershell|net user|net localgroup)\b|;|&&|\|)"}},
-        {"rce_windows_powershell_pattern", {wlcf->rce_windows_powershell_pattern, "(\bpowershell\b)"}},
-        {"rce_unix_shell_expression_pattern", {wlcf->rce_unix_shell_expression_pattern, "($\(.+\)|`.+`)"}},
-        {"rce_windows_for_if_pattern", {wlcf->rce_windows_for_if_pattern, "(\bfor\b|\bif\b)"}},
-        {"rce_direct_unix_command_pattern", {wlcf->rce_direct_unix_command_pattern, "(\bexec\b|\bsystem\b)"}},
-        {"rce_unix_shell_code_pattern", {wlcf->rce_unix_shell_code_pattern, "(\b/bin/sh\b|\b/bin/bash\b)"}},
-        {"rce_shellshock_pattern", {wlcf->rce_shellshock_pattern, "(\(\)\s*\{)"}},
-        {"restricted_file_upload_pattern", {wlcf->restricted_file_upload_pattern, "(\.php|\.asp|\.jsp)"}},
+        {"rce_unix_command_injection_pattern", {wlcf->rce_unix_command_injection_pattern, "(\\b(cat|ls|ps|netstat|whoami|id)\\b|;|&&|\\|)"}},
+        {"rce_windows_command_injection_pattern", {wlcf->rce_windows_command_injection_pattern, "(\\b(cmd|powershell|net user|net localgroup)\\b|;|&&|\\|)"}},
+        {"rce_windows_powershell_pattern", {wlcf->rce_windows_powershell_pattern, "(\\bpowershell\\b)"}},
+        {"rce_unix_shell_expression_pattern", {wlcf->rce_unix_shell_expression_pattern, "($\\(.+\\)|`.+`)"}},
+        {"rce_windows_for_if_pattern", {wlcf->rce_windows_for_if_pattern, "(\\bfor\\b|\\bif\\b)"}},
+        {"rce_direct_unix_command_pattern", {wlcf->rce_direct_unix_command_pattern, "(\\bexec\\b|\\bsystem\\b)"}},
+        {"rce_unix_shell_code_pattern", {wlcf->rce_unix_shell_code_pattern, "(\\b/bin/sh\\b|\\b/bin/bash\\b)"}},
+        {"rce_shellshock_pattern", {wlcf->rce_shellshock_pattern, "(\\(\\)\\s*\\{)"}},
+        {"restricted_file_upload_pattern", {wlcf->restricted_file_upload_pattern, "(\\.php|\\.asp|\\.jsp)"}},
 
         // PHP Injection Patterns
-        {"php_opening_closing_tag_pattern", {wlcf->php_opening_closing_tag_pattern, "(<\?(php)?|\?>)"}},
-        {"php_script_file_upload_pattern", {wlcf->php_script_file_upload_pattern, "(\.(php|phtml|phar)$)"}},
-        {"php_config_directive_pattern", {wlcf->php_config_directive_pattern, "(\b(ini_set|ini_get|dl|disable_functions|disable_classes)\b)"}},
-        {"php_variables_pattern", {wlcf->php_variables_pattern, "($_(GET|POST|COOKIE|REQUEST|FILES|ENV|SERVER|SESSION|GLOBALS)\b)"}},
+        {"php_opening_closing_tag_pattern", {wlcf->php_opening_closing_tag_pattern, "(<\\?(php)?|\\?>)"}},
+        {"php_script_file_upload_pattern", {wlcf->php_script_file_upload_pattern, "(\\.(php|phtml|phar)$)"}},
+        {"php_config_directive_pattern", {wlcf->php_config_directive_pattern, "(\\b(ini_set|ini_get|dl|disable_functions|disable_classes)\\b)"}},
+        {"php_variables_pattern", {wlcf->php_variables_pattern, "($_(GET|POST|COOKIE|REQUEST|FILES|ENV|SERVER|SESSION|GLOBALS)\\b)"}},
         {"php_io_stream_pattern", {wlcf->php_io_stream_pattern, "(php://input|data://text/plain|php://filter)"}},
-        {"php_high_risk_function_name_pattern", {wlcf->php_high_risk_function_name_pattern, "(\b(exec|shell_exec|system|passthru|popen|proc_open)\b)"}},
-        {"php_medium_risk_function_name_pattern", {wlcf->php_medium_risk_function_name_pattern, "(\b(eval|assert|preg_replace|create_function|include|require)\b)"}},
-        {"php_high_risk_function_call_pattern", {wlcf->php_high_risk_function_call_pattern, "(\b(call_user_func|call_user_func_array)\b)"}},
-        {"php_serialized_object_injection_pattern", {wlcf->php_serialized_object_injection_pattern, "(O:\d+:\"[^\"]+\":\d+:\{[^\}]+\})"}},
-        {"php_variable_function_call_pattern", {wlcf->php_variable_function_call_pattern, "(${.*?}\(.*?\))"}},
+        {"php_high_risk_function_name_pattern", {wlcf->php_high_risk_function_name_pattern, "(\\b(exec|shell_exec|system|passthru|popen|proc_open)\\b)"}},
+        {"php_medium_risk_function_name_pattern", {wlcf->php_medium_risk_function_name_pattern, "(\\b(eval|assert|preg_replace|create_function|include|require)\\b)"}},
+        {"php_high_risk_function_call_pattern", {wlcf->php_high_risk_function_call_pattern, "(\\b(call_user_func|call_user_func_array)\\b)"}},
+        {"php_serialized_object_injection_pattern", {wlcf->php_serialized_object_injection_pattern, "(O:\\d+:\"[^\"]+\":\\d+:\\{[^\\}]+\\})"}},
+        {"php_variable_function_call_pattern", {wlcf->php_variable_function_call_pattern, "(${.*?}\\(.*?\\))"}},
         {"php_wrapper_scheme_pattern", {wlcf->php_wrapper_scheme_pattern, "(data://text/plain;base64,)"}},
 
         // Node.js Injection Pattern
-        {"nodejs_injection_pattern", {wlcf->nodejs_injection_pattern, "(require\(|child_process|fs\.|eval\()"}},
+        {"nodejs_injection_pattern", {wlcf->nodejs_injection_pattern, "(require\\(|child_process|fs\\.|eval\\()"}},
 
         // XSS Patterns
         {"xss_libinjection_pattern", {wlcf->xss_libinjection_pattern, "pattern_for_libinjection"}},
@@ -118,15 +119,15 @@ std::string get_pattern_from_conf_loc(ngx_http_waf_loc_conf_t *wlcf, const char 
         {"xss_ie_filters_320_pattern", {wlcf->xss_ie_filters_320_pattern, "src=.*?"}},
         {"xss_ie_filters_330_pattern", {wlcf->xss_ie_filters_330_pattern, "on.*?="}},
         {"xss_ie_filters_340_pattern", {wlcf->xss_ie_filters_340_pattern, "style=.*?"}},
-        {"xss_utf7_encoding_pattern", {wlcf->xss_utf7_encoding_pattern, "\+ADw-"}},
+        {"xss_utf7_encoding_pattern", {wlcf->xss_utf7_encoding_pattern, "\\+ADw-"}},
         {"xss_js_obfuscation_pattern", {wlcf->xss_js_obfuscation_pattern, "fromCharCode|eval"}},
-        {"xss_js_global_variable_pattern", {wlcf->xss_js_global_variable_pattern, "window\."}},
-        {"xss_angularjs_template_injection_pattern", {wlcf->xss_angularjs_template_injection_pattern, "\{\{.*?\}\}"}},
+        {"xss_js_global_variable_pattern", {wlcf->xss_js_global_variable_pattern, "window\\."}},
+        {"xss_angularjs_template_injection_pattern", {wlcf->xss_angularjs_template_injection_pattern, "\\{\\{.*?\\}\\}"}},
 
         // SQL Injection Patterns
-        {"sqli_mysql_comment_obfuscation_pattern", {wlcf->sqli_mysql_comment_obfuscation_pattern, "\/\*!.*?\*\/.*?(union|select|insert|update|delete|drop|alter|create|replace)"}},
-        {"sqli_benchmark_sleep_pattern", {wlcf->sqli_benchmark_sleep_pattern, "(sleep\(\d+\)|benchmark\(\d+,)"}},
-        {"sqli_operator_pattern", {wlcf->sqli_operator_pattern, "(=|<|>|!|\|\||&&|<>|>=|<=|!=|LIKE|BETWEEN|IS NULL|IS NOT NULL)"}},
+        {"sqli_mysql_comment_obfuscation_pattern", {wlcf->sqli_mysql_comment_obfuscation_pattern, "\\/\\*!.*?\\*\\/.*?(union|select|insert|update|delete|drop|alter|create|replace)"}},
+        {"sqli_benchmark_sleep_pattern", {wlcf->sqli_benchmark_sleep_pattern, "(sleep\\(\\d+\\)|benchmark\\(\\d+,)"}},
+        {"sqli_operator_pattern", {wlcf->sqli_operator_pattern, "(=|<|>|!|\\|\\||&&|<>|>=|<=|!=|LIKE|BETWEEN|IS NULL|IS NOT NULL)"}},
         {"sql_injection_pattern", {wlcf->sql_injection_pattern, "(union.*select|select.*from|drop.*table|insert.*into|or.*=.*|--|;|exec|union|select|concat|information_schema)"}},
         {"sqli_libinjection_pattern", {wlcf->sqli_libinjection_pattern, "pattern_for_libinjection"}},
         {"sqli_common_injection_testing_pattern", {wlcf->sqli_common_injection_testing_pattern, "select.*from.*where"}},
@@ -135,17 +136,17 @@ std::string get_pattern_from_conf_loc(ngx_http_waf_loc_conf_t *wlcf, const char 
         {"sqli_authentication_bypass_1_pattern", {wlcf->sqli_authentication_bypass_1_pattern, "(or.*=.*|--|;|union.*select)"}},
         {"sqli_mssql_code_execution_pattern", {wlcf->sqli_mssql_code_execution_pattern, "exec.*xp_"}},
         {"sqli_chained_injection_1_pattern", {wlcf->sqli_chained_injection_1_pattern, "and.*select"}},
-        {"sqli_integer_overflow_pattern", {wlcf->sqli_integer_overflow_pattern, "(\d{10,}|\d+\.\d+e\d+|0x[0-9a-fA-F]+)"}},
-        {"sqli_conditional_injection_pattern", {wlcf->sqli_conditional_injection_pattern, "(case when|if\())"}},
+        {"sqli_integer_overflow_pattern", {wlcf->sqli_integer_overflow_pattern, "(\\d{10,}|\\d+\\.\\d+e\\d+|0x[0-9a-fA-F]+)"}},
+        {"sqli_conditional_injection_pattern", {wlcf->sqli_conditional_injection_pattern, "(case when|if\\())"}},
         {"sqli_mysql_charset_switch_pattern", {wlcf->sqli_mysql_charset_switch_pattern, "charset=utf8"}},
         {"sqli_match_against_pattern", {wlcf->sqli_match_against_pattern, "match.*against"}},
         {"sqli_authentication_bypass_2_pattern", {wlcf->sqli_authentication_bypass_2_pattern, "admin'--"}},
         {"sqli_basic_injection_pattern", {wlcf->sqli_basic_injection_pattern, "(union.*select|select.*from|insert.*into|delete.*from|update.*set)"}},
         {"sqli_postgres_sleep_pattern", {wlcf->sqli_postgres_sleep_pattern, "pg_sleep"}},
-        {"sqli_mongodb_injection_pattern", {wlcf->sqli_mongodb_injection_pattern, "db\.getCollection"}},
-        {"sqli_mysql_comment_condition_pattern", {wlcf->sqli_mysql_comment_condition_pattern, "(--|\#|/\*|/\*/|;|')"}},
+        {"sqli_mongodb_injection_pattern", {wlcf->sqli_mongodb_injection_pattern, "db\\.getCollection"}},
+        {"sqli_mysql_comment_condition_pattern", {wlcf->sqli_mysql_comment_condition_pattern, "(--|\\#|/\\*|/\\*/|;|')"}},
         {"sqli_chained_injection_2_pattern", {wlcf->sqli_chained_injection_2_pattern, "select.*and.*select"}},
-        {"sqli_mysql_postgres_function_pattern", {wlcf->sqli_mysql_postgres_function_pattern, "(\(.*select.*\))"}},
+        {"sqli_mysql_postgres_function_pattern", {wlcf->sqli_mysql_postgres_function_pattern, "(\\(.*select.*\\))"}},
         {"sqli_classic_injection_1_pattern", {wlcf->sqli_classic_injection_1_pattern, "or.*=.*"}},
         {"sqli_authentication_bypass_3_pattern", {wlcf->sqli_authentication_bypass_3_pattern, "or.*=.*--"}},
         {"sqli_mysql_udf_injection_pattern", {wlcf->sqli_mysql_udf_injection_pattern, "udf_"}},
@@ -156,17 +157,17 @@ std::string get_pattern_from_conf_loc(ngx_http_waf_loc_conf_t *wlcf, const char 
         {"sqli_restricted_character_pattern", {wlcf->sqli_restricted_character_pattern, "[;\"']"}},
         {"sqli_comment_sequence_pattern", {wlcf->sqli_comment_sequence_pattern, "--"}},
         {"sqli_hex_encoding_pattern", {wlcf->sqli_hex_encoding_pattern, "0x[0-9a-fA-F]+"}},
-        {"sqli_meta_character_pattern", {wlcf->sqli_meta_character_pattern, "\W"}},
+        {"sqli_meta_character_pattern", {wlcf->sqli_meta_character_pattern, "\\W"}},
         {"sqli_mysql_inline_comment_pattern", {wlcf->sqli_mysql_inline_comment_pattern, "--.*$"}},
         {"sqli_bypass_ticks_pattern", {wlcf->sqli_bypass_ticks_pattern, "`|'"}},
 
         // MS-ThreatIntel-AppSec patterns
-        {"path_traversal_evasion_header_pattern", {wlcf->path_traversal_evasion_header_pattern, "(/\.\././\.\./)"}},
-        {"path_traversal_evasion_body_pattern", {wlcf->path_traversal_evasion_body_pattern, "(/\.\././\.\./)"}},
+        {"path_traversal_evasion_header_pattern", {wlcf->path_traversal_evasion_header_pattern, "(/\\.\\././\\.\\./)"}},
+        {"path_traversal_evasion_body_pattern", {wlcf->path_traversal_evasion_body_pattern, "(/\\.\\././\\.\\./)"}},
 
         // MS-ThreatIntel-SQLI patterns
         {"sql_injection_common_testing_pattern", {wlcf->sql_injection_common_testing_pattern, "(union.*select|select.*from|drop.*table|insert.*into|or.*=.*|--|;|exec|union|select|concat|information_schema)"}},
-        {"sql_injection_comment_sequence_pattern", {wlcf->sql_injection_comment_sequence_pattern, "(--|/\*|\*/|#)"}},
+        {"sql_injection_comment_sequence_pattern", {wlcf->sql_injection_comment_sequence_pattern, "(--|/\\*|\\*/|#)"}},
         {"sql_injection_attack_pattern", {wlcf->sql_injection_attack_pattern, "(union.*select|select.*from|drop.*table|insert.*into|or.*=.*|--|;|exec|union|select|concat|information_schema)"}},
         {"sql_authentication_bypass_pattern", {wlcf->sql_authentication_bypass_pattern, "(admin'--|or.*=.*|--|;|union.*select)"}}};
 
@@ -210,15 +211,13 @@ bool log_and_reject(ngx_http_request_t *r, const char *message, const char *rule
     r->headers_out.status = NGX_HTTP_FORBIDDEN;
 
     // Prepare the response body with the message
-    std::string response_body = "403 Forbidden
-";
+    std::string response_body = "403 Forbidden";
+    response_body += "\n";
     response_body += "WAF - RuleId: ";
     response_body += rule_id;
-    response_body += "
-";
+    response_body += "\n";
     response_body += message;
-    response_body += "
-";
+    response_body += "\n";
 
     // Set the content length
     r->headers_out.content_length_n = response_body.size();
@@ -293,4 +292,23 @@ bool compile_and_log_regex(ngx_http_request_t *r, const std::string &pattern_str
         ngx_waf_log_access(r, ("Regex error in " + rule_name + ": " + std::string(e.what())).c_str());
         return false;
     }
+}
+
+// Helper function to decode percent-encoded characters
+std::string decode_percent_encoded(const std::string &input) {
+    std::string result;
+    result.reserve(input.length());
+
+    for (size_t i = 0; i < input.length(); ++i) {
+        if (input[i] == '%' && i + 2 < input.length()) {
+            std::string hex_value = input.substr(i + 1, 2);
+            char decoded_char = static_cast<char>(std::strtol(hex_value.c_str(), nullptr, 16));
+            result += decoded_char;
+            i += 2;
+        } else {
+            result += input[i];
+        }
+    }
+
+    return result;
 }
