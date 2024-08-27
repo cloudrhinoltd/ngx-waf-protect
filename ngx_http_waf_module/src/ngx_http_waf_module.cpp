@@ -963,7 +963,7 @@ char *ngx_http_waf_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_waf_loc_conf_t *prev = (ngx_http_waf_loc_conf_t *)parent;
     ngx_http_waf_loc_conf_t *conf = (ngx_http_waf_loc_conf_t *)child;
 
-    ngx_conf_merge_str_value(conf->geoip_db_path, prev->geoip_db_path, "./nginx_waf_project/geoip/GeoLite2-City.mmdb");
+    ngx_conf_merge_str_value(conf->geoip_db_path, prev->geoip_db_path, "./geoip/GeoLite2-City.mmdb");
 
     // Use the helper function to merge all patterns
     merge_pattern(cf, conf->sql_injection_pattern, prev->sql_injection_pattern, conf, "sql_injection_pattern");

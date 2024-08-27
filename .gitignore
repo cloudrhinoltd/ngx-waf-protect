@@ -113,7 +113,6 @@ CMakeLists.txt
 
 # Ignore documentation
 docs/
-*.md
 
 # Ignore nginx core
 nginx-1.27.1/

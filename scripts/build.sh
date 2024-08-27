@@ -1,4 +1,26 @@
 #!/bin/bash
+#
+# Copyright (C) 2024 Cloud Rhino Pty Ltd
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+# This script contains parts under a dual-license:
+# Only the 'enable_protocol_attack' and 'enable_general_rules' features are 
+# covered by the Apache 2.0 License, other features require a commercial license.
+# 
+# GitHub Repo: https://github.com/cloudrhinoltd/ngx-waf-protect
+# Contact Email: cloudrhinoltd@gmail.com
+
 set -ex
 
 # Define variables
@@ -21,6 +43,7 @@ mkdir -p "$NGINX_TEMP_DIR/proxy_temp"
 mkdir -p "$NGINX_TEMP_DIR/fastcgi_temp"
 mkdir -p "$NGINX_TEMP_DIR/uwsgi_temp"
 mkdir -p "$NGINX_TEMP_DIR/scgi_temp"
+mkdir -p /tmp/nginx
 
 # Download and extract the latest NGINX core
 if [ ! -d "$NGINX_SRC_DIR" ]; then
@@ -143,11 +166,11 @@ http {
 }
 EOF
 
-# Create a simple HTML file for testing
+# Create a simple HTML file for the module home page
 mkdir -p "$BUILD_DIR/html"
-echo "<html><body><h1>CLRH NGINX WAF Module Test</h1></body></html>" > "$BUILD_DIR/html/index.html"
+echo "<html><body><h1>CLRH NGINX WAF Protect Module</h1></body></html>" > "$BUILD_DIR/html/index.html"
 
 # Output success message
-echo "Custom NGINX with WAF module built successfully and located at $BUILD_DIR."
+echo "Custom NGINX with WAF Protect module built successfully and located at $BUILD_DIR."
 cd $HOME_DIR
 build/nginx
