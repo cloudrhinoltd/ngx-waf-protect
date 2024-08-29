@@ -83,6 +83,50 @@ http {
 - **Context:** `http, server, location`
 - **Description:** Enables or disables general security rules.
 
+## Rule Groups and Supported Rules
+
+### 1. General Rules
+- **920100 - Invalid HTTP Request Line**: Protects against malformed HTTP request lines.
+- **920300 - Request Missing a Host Header**: Ensures requests include a valid Host header to prevent protocol attacks.
+- **920310 - Request with Invalid Host Header**: Validates the Host header against allowed domain patterns.
+- **921110 - HTTP Protocol Anomaly: Request with Content-Length Header and Chunked Transfer-Encoding**: Detects conflicting HTTP headers that could indicate an attack.
+- **920420 - Request Contains Multiple Content-Length Headers**: Prevents requests with multiple conflicting Content-Length headers.
+
+### 2. SQL Injection Rules
+- **942100 - SQL Injection Attack Detected via LibInjection**: Uses libInjection to detect SQL injection patterns.
+- **942110 - SQL Injection Attempt Detected**: Identifies attempts to execute SQL commands.
+- **942190 - SQL Injection Attack Identified by Conditional Statements**: Looks for SQL injection patterns using conditional statements like 'IF', 'CASE', etc.
+- **942200 - SQL Injection Bypass Using Comments**: Prevents SQL injection attempts using SQL comments for bypass techniques.
+
+### 3. Cross-Site Scripting (XSS) Rules
+- **941100 - XSS Attack Detected via LibInjection**: Uses libInjection to identify common XSS attack patterns.
+- **941130 - XSS Attack via HTML Tags**: Identifies malicious use of HTML tags for scripting attacks.
+- **941180 - XSS Attack Detected Using JavaScript URIs**: Blocks malicious use of JavaScript URIs in links or other attributes.
+- **941160 - XSS Detected by Event Handlers**: Detects malicious scripts embedded in HTML event handlers.
+
+### 4. Remote Command Execution (RCE) and File Inclusion
+- **932100 - Remote Command Execution: Unix Commands**: Detects attempts to execute shell commands via Unix systems.
+- **932110 - Remote Command Execution: Windows Commands**: Identifies attempts to execute Windows-specific commands.
+- **931100 - Local File Inclusion Attempt**: Blocks attempts to include local files on the server, a common method for accessing sensitive information.
+- **931120 - Remote File Inclusion Attempt**: Detects attempts to include remote files, which can lead to unauthorized code execution.
+
+### 5. Protocol Attack Rules
+- **921130 - Request Contains Content-Length but Not Allowed Method**: Ensures only valid HTTP methods can carry a Content-Length header.
+- **921150 - Invalid HTTP Version Number**: Blocks requests using invalid or unsupported HTTP versions.
+- **921180 - Invalid Request Line Format**: Detects malformed request lines that can be used to exploit servers.
+
+### 6. Path Traversal and File Access Control
+- **930100 - Path Traversal Attempt Detected**: Identifies attempts to navigate directories improperly to access restricted files.
+- **930110 - File Access Attempt to Restricted Files**: Prevents unauthorized access to critical system or application files.
+
+### 7. Malicious User-Agent Patterns
+- **913100 - Malicious User-Agent Detected**: Identifies known malicious or suspicious user-agent patterns.
+- **913110 - User-Agent Indicates Automation Tool**: Blocks requests from known automation tools or bots that are often used in attacks.
+
+### 8. URL Encoding Abuse
+- **920430 - Multiple URL Encoding Detected**: Detects requests with multiple levels of URL encoding, often used to bypass input validation.
+- **920440 - URL Encoding Abuse Detected**: Identifies improper use of encoding to conceal malicious requests.
+
 ## Installation
 
 ### Building as a Static Module
